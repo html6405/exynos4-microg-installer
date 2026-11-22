@@ -1,0 +1,158 @@
+{
+  "schema": 1,
+  "flavor": "microg-companion",
+  "os_sdk": 36,
+  "abi": "armeabi-v7a",
+  "rom_support_contract": "HTML6405 LOS23.2 restricted microG spoofing; actual self-check required",
+  "components": [
+    {
+      "package": "com.google.android.gms",
+      "version_code": 252432036,
+      "version_name": "0.3.18.252432",
+      "signer_sha256": "9bd06727e62796c0130eb6dab39b73157451582cbd138e86c468acc395d14165",
+      "apk_sha256": "1094fa60ace2367ac52bd08d1bd4f33fa8144ba930e355121b28234b8ebbf382",
+      "source_url": "https://github.com/microg/GmsCore/releases/download/v0.3.18.252432/com.google.android.gms-252432036.apk",
+      "source_revision": "v0.3.18.252432"
+    },
+    {
+      "package": "com.android.vending",
+      "version_code": 84022636,
+      "version_name": "0.3.18.40226",
+      "signer_sha256": "9bd06727e62796c0130eb6dab39b73157451582cbd138e86c468acc395d14165",
+      "apk_sha256": "3f1bde2f72bca746fbb53b61a32c2a85fcb026f886ee96d6fe9a05de9a6c6d5b",
+      "source_url": "https://github.com/microg/GmsCore/releases/download/v0.3.18.252432/com.android.vending-84022636.apk",
+      "source_revision": "v0.3.18.252432"
+    }
+  ],
+  "files": [
+    {
+      "logical_path": "addon.d/50-exynos4-google-services.sh",
+      "sha256": "45d2bbbe642fe5c814494f8ad53a000709ec36097ab50b0ecc8cd2324a68d449",
+      "size": 1194,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0755",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "product/etc/permissions/privapp-permissions-exynos4-microg-companion.xml",
+      "sha256": "150d000bc78ca4ae8a211a4ec4604d3b2f0990b4d2aeab7953c7dde1e1d67e0d",
+      "size": 337,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "product/etc/permissions/privapp-permissions-exynos4-microg-services.xml",
+      "sha256": "ccee16886ee88f8c080c36f19588c58b57f4bf03c7c647d016be40a2210495c9",
+      "size": 1085,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "product/etc/sysconfig/exynos4-microg.xml",
+      "sha256": "de0aacbb1dde24970db3513859f006d340fb7e3877c53d4e5d1e063ada9f5d2a",
+      "size": 181,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "product/priv-app/Exynos4MicroGCompanion/Companion.apk",
+      "sha256": "3f1bde2f72bca746fbb53b61a32c2a85fcb026f886ee96d6fe9a05de9a6c6d5b",
+      "size": 4212484,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "product/priv-app/Exynos4MicroGServices/Services.apk",
+      "sha256": "1094fa60ace2367ac52bd08d1bd4f33fa8144ba930e355121b28234b8ebbf382",
+      "size": 108520063,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "product/priv-app/Exynos4MicroGServices/lib/arm/libc++_shared.so",
+      "sha256": "fb9d32c4dadb332082d3323046903175855bd15431514543f2042b0f0692915e",
+      "size": 911460,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "product/priv-app/Exynos4MicroGServices/lib/arm/libconscrypt_gmscore_jni.so",
+      "sha256": "eec0a1788635abe6d51eb1a1f63c434e2d94c5660d5b719eda7c1d18e895db80",
+      "size": 1288128,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "product/priv-app/Exynos4MicroGServices/lib/arm/libcronet.102.0.5005.125.so",
+      "sha256": "95c6558df5d0bcdc28f9629e003efc32591b2236905afe2cc05ffe31c611fd54",
+      "size": 3309728,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "product/priv-app/Exynos4MicroGServices/lib/arm/libimage_processing_util_jni.so",
+      "sha256": "107fd71eac6ac5f71e21fffb27dcacfb9c3b72d0262e360ab600f78a25b6b2d7",
+      "size": 21692,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "product/priv-app/Exynos4MicroGServices/lib/arm/libmapbox-gl.so",
+      "sha256": "1ed8743e2c1a61d4c360c68cec8a196f5580fb22b0e14cd869fd3abf6aebe4fe",
+      "size": 7384204,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "product/priv-app/Exynos4MicroGServices/lib/arm/libopencv_java4.so",
+      "sha256": "52b26789174caaa18ef98b8660407d1bd8a47303007f9c6fd222b425b0f8a914",
+      "size": 15554404,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    }
+  ],
+  "manifest_self": {
+    "logical_path": "etc/exynos4-google-services/installed.json",
+    "hash_source": "external artifact audit; excluded from own files to avoid recursive hash"
+  },
+  "preservation_owner": "addon.d/50-exynos4-google-services.sh",
+  "ota_validation": {
+    "status": "UNVERIFIED",
+    "required_cycles": 2,
+    "common_backuptool_fix_required": true,
+    "completed_cycles": 0
+  },
+  "candidate_not_flashable": false,
+  "flashable": true,
+  "status": "UNSIGNED_RECOVERY_TEST_RUNTIME_AND_OTA_UNVERIFIED",
+  "test_installer": {
+    "version": 1,
+    "source_payload_sha256": "d177670e25f5fc301c485d4846cbaf1e9e53035c9e5bc139b0ca7034583db061",
+    "writer_template_sha256": "b07c7ed1346567d55074a975c8c2058eff68a85360ad1cba0af01e800fafa3db",
+    "clean_install_only": true,
+    "public_release_approved": false
+  }
+}

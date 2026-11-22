@@ -1,0 +1,417 @@
+{
+  "fixture_count": 48,
+  "all_pass": true,
+  "real_system_mounts_or_block_devices": false,
+  "uid_gid_and_selinux_are_simulated": true,
+  "apk_files_are_synthetic_for_transaction_fixtures": true,
+  "results": [
+    {
+      "fixture": "success",
+      "exit": 0,
+      "states": [
+        "COMMITTED"
+      ],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print TEST install committed; rollback retained at /tmp/exynos4-recovery-fixture-yeki3_st/data/local/tmp/exynos4-google-services-recovery/txn-1795383531-948115/rollback.sh\nui_print\nui_print No userdata/apps/accounts were removed; reboot and validate explicitly\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "manual_rollback",
+      "exit": 0,
+      "states": [
+        "COMMITTED"
+      ],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print TEST install committed; rollback retained at /tmp/exynos4-recovery-fixture-5xsqysu0/data/local/tmp/exynos4-google-services-recovery/txn-1795383532-948548/rollback.sh\nui_print\nui_print No userdata/apps/accounts were removed; reboot and validate explicitly\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "bad_hash",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: payload checksum mismatch\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "duplicate_archive_entry",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: payload checksum mismatch\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "symlink_destination",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: symlink destination\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "copy_failure",
+      "exit": 1,
+      "states": [
+        "ROLLED_BACK"
+      ],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: file copy failed\nui_print\nui_print Transaction rolled back after failure\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "chcon_failure",
+      "exit": 1,
+      "states": [
+        "ROLLED_BACK"
+      ],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print chcon failed path=/tmp/exynos4-recovery-fixture-8h_lgnal/volume/system/product/priv-app/TestPackage/Test.apk.exynos4-txn-1795383534-950380.tmp\nui_print\nui_print REFUSE: file metadata failed\nui_print\nui_print Transaction rolled back after failure\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "signal_failure",
+      "exit": 1,
+      "states": [
+        "ROLLED_BACK"
+      ],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print Transaction rolled back after failure\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "backup_corruption",
+      "exit": 1,
+      "states": [
+        "FAILED_CLEAN"
+      ],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: original backup hash mismatch\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "foreign_change",
+      "exit": 1,
+      "states": [
+        "RECOVERY_REQUIRED"
+      ],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: file copy failed\nui_print\nui_print ROLLBACK INCOMPLETE: stay in recovery; preserve transaction backup\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "unfinished_transaction",
+      "exit": 1,
+      "states": [
+        "DIRTY"
+      ],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: unfinished transaction exists; use saved rollback helper\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "microg_xml",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: existing or retained Google/microG package state; no automatic migration\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "google_abx",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: existing or retained Google/microG package state; no automatic migration\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "system_microg",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: existing system ecosystem: Exynos4MicroGServices\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "unknown_package_state",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: unknown/locked package state format\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "missing_package_state_with_apps",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: apps present without package state\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "unknown_model",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: unsupported recovery model\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "wrong_rom_model",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: ROM/recovery identity mismatch\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "wrong_api",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: API36 required\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "wrong_abi",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: ARM32 required\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "locked_data",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: encrypted or unknown userdata state unsupported\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "unknown_crypto",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: unknown crypto state on unsupported recovery kernel\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "wrong_data_mount",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: USERDATA not mounted read/write at /data\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "low_system_space",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: insufficient storage at /tmp/exynos4-recovery-fixture-rpc99sn8/volume/system\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "low_tmp_space",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: insufficient storage at /tmp/exynos4-recovery-fixture-ik3w33p4/work\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "hardlink_original",
+      "exit": 1,
+      "states": [
+        "FAILED_CLEAN"
+      ],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: nonregular/hardlinked destination\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "bad_table_path",
+      "exit": 1,
+      "states": [],
+      "stdout": "REFUSE: unapproved payload path\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "duplicate_table",
+      "exit": 1,
+      "states": [],
+      "stdout": "REFUSE: duplicate/malformed file table\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "preexisting_workspace",
+      "exit": 1,
+      "states": [],
+      "stdout": "REFUSE: cannot create private workspace\n",
+      "stderr": "mkdir: das Verzeichnis \u00bb/tmp/exynos4-recovery-fixture-ybtt5ntf/work\u201c kann nicht angelegt werden: Die Datei existiert bereits\n",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "wrong_system_block",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: unexpected SYSTEM device\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "wrong_system_size",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: 2GiB SYSTEM required\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "dynamic_layout",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: dynamic partitions unsupported\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "ab_layout",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: A/B layout unsupported\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "existing_marker",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: services flavor already installed; clean-only test writer\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "existing_addon",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: existing preservation owner\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "symlink_package_state",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: unreadable package state\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "power_loss",
+      "exit": -9,
+      "states": [
+        "DIRTY"
+      ],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "retained_ce_data",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: retained ecosystem app data\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "retained_de_data",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: retained ecosystem app data\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "retained_legacy_data",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: retained legacy ecosystem data\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "retained_login_data",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: retained ecosystem app data\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "fallback_plain",
+      "exit": 0,
+      "states": [
+        "COMMITTED"
+      ],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print Legacy recovery has no crypto property; bounded raw-ext4/plaintext-user proof passed\nui_print\nui_print TEST install committed; rollback retained at /tmp/exynos4-recovery-fixture-vsc315xq/data/local/tmp/exynos4-google-services-recovery/txn-1795383539-954386/rollback.sh\nui_print\nui_print No userdata/apps/accounts were removed; reboot and validate explicitly\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "fallback_f2fs",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: legacy plain-data proof requires raw ext4\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "fallback_overlay",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: locked or overmounted user data\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "fallback_fscrypt",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: cannot exclude ext4 file encryption\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "fallback_missing_state",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: legacy crypto proof requires readable package state\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "fallback_encoded_user",
+      "exit": 1,
+      "states": [],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print REFUSE: unknown user-data directory\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    },
+    {
+      "fixture": "directory_context_mismatch",
+      "exit": 1,
+      "states": [
+        "ROLLED_BACK"
+      ],
+      "stdout": "ui_print Exynos4 minimal-gapps UNSIGNED TEST installer; OTA survival NOT validated\nui_print\nui_print Metadata mismatch path=/tmp/exynos4-recovery-fixture-sp90ir8i/volume/system/etc/exynos4-google-services actual=0:0:755:u:object_r:unlabeled:s0 expected=0:0:755:u:object_r:system_file:s0\nui_print\nui_print REFUSE: directory metadata failed\nui_print\nui_print Transaction rolled back after failure\nui_print\n",
+      "stderr": "",
+      "personal_backup_unchanged": true
+    }
+  ]
+}

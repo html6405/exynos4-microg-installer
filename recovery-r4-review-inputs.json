@@ -1,0 +1,7 @@
+{
+  "recovery-writer.sh.in": "b07c7ed1346567d55074a975c8c2058eff68a85360ad1cba0af01e800fafa3db",
+  "pack_test_zip.py": "36c9cc5bf79585f97bc263f452b248b503d36e89b33d386dc89d6ce6ed91b188",
+  "test_recovery_writer.py": "0a4cf448d1de2fd91571a6003acd395622cf5708a14f33ad1e531b0aa1b7c78c",
+  "recovery-writer-fixtures.json": "16d8652fb1f8860317863751b6b49ca437e82b27ede2429f52adb3bf4734433d",
+  "mtg-arm-toybox": "3dfaacc17df061913f47258a1aadcf1a42167f814de73de57c737b650340ecca"
+}
