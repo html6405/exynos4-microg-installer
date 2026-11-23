@@ -1,0 +1,9 @@
+# Experimental microG with Google Play Store
+
+For HTML6405 LineageOS 23.2 Vanilla on Exynos4 (32-bit ARM, API 36). The r7 test build combines microG Services 0.3.18.252432 with the original Phonesky 45.7.17. The build report records the input hashes, APK signatures, writer hash and complete file manifest. The Android test base was GT-N8000 Vanilla incremental 1795369378 (ROM ZIP SHA-256 1f083b4ff63eaa0606b7243947323f1579a7cc5a0be0604edcc326fe29c28bd4).
+
+On the GT-N8000, the r6 payload plus the r7 system configuration installed and launched AIDA64 through the real Play Store under SELinux Enforcing. The original Store APK ran with the narrow system-defined except-idle exemption. No full user battery exemption was active. One AIDA64 cold launch took 39 seconds during substantial system lag. Coverage is limited to this test device, configuration and Store version. Installation of the complete r7 archive, Store self-update and Vanilla OTA survival are pending. Keep the Companion release for normal use.
+
+For a test installation, start from clean LOS 23.2 Vanilla and use a compatible TWRP with access to System and Data. Back up first. Verify the ZIP against the SHA-256 sidecar. Install the unsigned test ZIP in TWRP, then reboot and confirm Enforcing. Enable microG Device Registration and sign in before testing catalog and download. The archive rejects existing Google or microG package state. Switching from another flavor requires returning to a clean state. Preserve the previous ROM and add-on so you can recover from a failed test. See the repository README for the platform and TWRP prerequisites. Do not rely on automatic reintegration during an OTA in this preview.
+
+The Python scripts are source snapshots of the local packer and payload builder. Their paths refer to the archived input add-on ZIPs, the pinned recovery toybox and the local Android SDK. The report provides hashes for verifying those inputs and the release artifact.

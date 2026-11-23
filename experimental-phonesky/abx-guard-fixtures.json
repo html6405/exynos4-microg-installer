@@ -1,0 +1,181 @@
+{
+  "count": 35,
+  "all_pass": true,
+  "results": [
+    {
+      "fixture": "clean",
+      "allowed": true,
+      "exit": 0
+    },
+    {
+      "fixture": "allowed_history_com.google.android.gms",
+      "allowed": true,
+      "exit": 0
+    },
+    {
+      "fixture": "active_package_com.google.android.gms",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "allowed_history_com.android.vending",
+      "allowed": true,
+      "exit": 0
+    },
+    {
+      "fixture": "active_package_com.android.vending",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "allowed_history_com.google.android.gsf",
+      "allowed": true,
+      "exit": 0
+    },
+    {
+      "fixture": "active_package_com.google.android.gsf",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "allowed_history_com.google.android.gsf.login",
+      "allowed": true,
+      "exit": 0
+    },
+    {
+      "fixture": "active_package_com.google.android.gsf.login",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "interned_history",
+      "allowed": true,
+      "exit": 0
+    },
+    {
+      "fixture": "wrong_history_attribute",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "wrong_parent",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "nested_package",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "suffix_not_exact",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "duplicate_attribute",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "byte_hidden_identity",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "wrong_magic",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "invalid_pool",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "missing_end",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "trailing_bytes",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "truncated",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "overlong_utf8",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "unicode_unrelated",
+      "allowed": true,
+      "exit": 0
+    },
+    {
+      "fixture": "mixed_text",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "double_root",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "sensitive_unrelated_attribute",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "interned_history_reused_active",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "truncated_typed_blob",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "store_history_uninstalled",
+      "allowed": true,
+      "exit": 0
+    },
+    {
+      "fixture": "store_history_missing_marker",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "store_history_false_marker",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "gms_as_initiator",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "store_as_current_installer",
+      "allowed": false,
+      "exit": 3
+    },
+    {
+      "fixture": "supervision_history",
+      "allowed": true,
+      "exit": 0
+    },
+    {
+      "fixture": "supervision_active",
+      "allowed": false,
+      "exit": 3
+    }
+  ]
+}

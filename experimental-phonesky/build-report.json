@@ -1,0 +1,165 @@
+{
+  "flavor": "microg-phonesky",
+  "status": "PREPARED_UNSIGNED_TEST_NOT_DEVICE_OR_OTA_VERIFIED",
+  "source_payload_sha256": "309a1105598c5490c1756b26fb49266fbaa09079c34e615dbde558f0ff6e7b69",
+  "writer_template_sha256": "16449d9d2bd97af730fb69977dbdce533d21a3c536023535f8328b58cbfcc5d5",
+  "abx_guard_sha256": "dc364afee5021e4e3ee5afa6ee7a3a2805cc92eb458b96d9dc0d5616adc8cd62",
+  "update_binary_sha256": "af645e24cebc999ee1cfe8373d36dba28ff059e725c09255be99e765cf4d79f6",
+  "file_count": 14,
+  "system_bytes": 222591173,
+  "files": [
+    {
+      "logical_path": "addon.d/50-exynos4-google-services.sh",
+      "sha256": "fd95893ef6cf8dec502966594bf400b2cce442b92c44285b8b0ae430bc18e0d1",
+      "size": 1815,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0755",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "etc/exynos4-google-services/installed.json",
+      "sha256": "46a5636b104bd01bbe253548b400c3add41822cf4d0c9cfd771d1beb45197f7f",
+      "size": 15274,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "product/etc/permissions/privapp-permissions-exynos4-microg-services.xml",
+      "sha256": "ccee16886ee88f8c080c36f19588c58b57f4bf03c7c647d016be40a2210495c9",
+      "size": 1085,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "product/etc/permissions/privapp-permissions-google-product.xml",
+      "sha256": "5dcf7c24094691eec106a03f2815d0afd5de300f9ee683c42df2cac54abc36b8",
+      "size": 2697,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "product/etc/sysconfig/exynos4-microg.xml",
+      "sha256": "de0aacbb1dde24970db3513859f006d340fb7e3877c53d4e5d1e063ada9f5d2a",
+      "size": 181,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "product/etc/sysconfig/exynos4-phonesky.xml",
+      "sha256": "169f74c1d848f393a65fbe273222089a3b4d7a29725ead39ea36bfdb870bf1f4",
+      "size": 126,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "product/priv-app/Exynos4MicroGServices/Services.apk",
+      "sha256": "1094fa60ace2367ac52bd08d1bd4f33fa8144ba930e355121b28234b8ebbf382",
+      "size": 108520063,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "product/priv-app/Exynos4MicroGServices/lib/arm/libc++_shared.so",
+      "sha256": "fb9d32c4dadb332082d3323046903175855bd15431514543f2042b0f0692915e",
+      "size": 911460,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "product/priv-app/Exynos4MicroGServices/lib/arm/libconscrypt_gmscore_jni.so",
+      "sha256": "eec0a1788635abe6d51eb1a1f63c434e2d94c5660d5b719eda7c1d18e895db80",
+      "size": 1288128,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "product/priv-app/Exynos4MicroGServices/lib/arm/libcronet.102.0.5005.125.so",
+      "sha256": "95c6558df5d0bcdc28f9629e003efc32591b2236905afe2cc05ffe31c611fd54",
+      "size": 3309728,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "product/priv-app/Exynos4MicroGServices/lib/arm/libimage_processing_util_jni.so",
+      "sha256": "107fd71eac6ac5f71e21fffb27dcacfb9c3b72d0262e360ab600f78a25b6b2d7",
+      "size": 21692,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "product/priv-app/Exynos4MicroGServices/lib/arm/libmapbox-gl.so",
+      "sha256": "1ed8743e2c1a61d4c360c68cec8a196f5580fb22b0e14cd869fd3abf6aebe4fe",
+      "size": 7384204,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "product/priv-app/Exynos4MicroGServices/lib/arm/libopencv_java4.so",
+      "sha256": "52b26789174caaa18ef98b8660407d1bd8a47303007f9c6fd222b425b0f8a914",
+      "size": 15554404,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    },
+    {
+      "logical_path": "product/priv-app/Phonesky/Phonesky.apk",
+      "sha256": "ced7b35522efe02129f37b702a00a5a0fdc73c99cdfcc1ac5f1d17ecb4d47fac",
+      "size": 85580316,
+      "uid": 0,
+      "gid": 0,
+      "mode": "0644",
+      "selinux_context": "u:object_r:system_file:s0"
+    }
+  ],
+  "apk_signature_checks": [
+    {
+      "package": "com.google.android.gms",
+      "version_code": 252432036,
+      "apk_sha256": "1094fa60ace2367ac52bd08d1bd4f33fa8144ba930e355121b28234b8ebbf382",
+      "signer_sha256": [
+        "9bd06727e62796c0130eb6dab39b73157451582cbd138e86c468acc395d14165"
+      ],
+      "verified_at_api": 36
+    },
+    {
+      "package": "com.android.vending",
+      "version_code": 84571730,
+      "apk_sha256": "ced7b35522efe02129f37b702a00a5a0fdc73c99cdfcc1ac5f1d17ecb4d47fac",
+      "signer_sha256": [
+        "7ce83c1b71f3d572fed04c8d40c5cb10ff75e6d87d9df6fbd53f0468c2905053"
+      ],
+      "verified_at_api": 36
+    }
+  ],
+  "production_release_approved": false,
+  "power_loss_atomic": false,
+  "durable_rollback_requires_recovery_operator": true,
+  "zip": "Exynos4-LOS23-microg-phonesky-TWRP-r7-TEST-UNSIGNED.zip",
+  "zip_size": 150522415,
+  "zip_sha256": "530cfa1316ae19fcc6435472b5f3ac54f9c53b335ae299316f7edcfb2e42f96e",
+  "crc_pass": true
+}

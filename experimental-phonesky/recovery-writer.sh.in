@@ -1,0 +1,517 @@
+#!/sbin/sh
+# Exynos4 Google services TEST writer. Unsigned; no OTA survival claim.
+# Generated from reviewed inputs. No archive member is extracted as a path.
+FLAVOR='@@FLAVOR@@'
+FILE_COUNT=@@FILE_COUNT@@
+PAYLOAD_BYTES=@@PAYLOAD_BYTES@@
+INPUT_SHA='@@INPUT_SHA@@'
+MOUNTS=/proc/mounts
+DEVBASE=/dev/block/platform/dw_mmc/by-name
+DATA=/data
+TXROOT=/data/local/tmp/exynos4-google-services-recovery
+TMPROOT=/tmp/exynos4-google-services-work-$$
+MNT=/tmp/exynos4-google-services-system-$$
+S=$MNT/system
+FILES=$TMPROOT/files
+TXN=
+TXID=
+MOUNTED=0
+MOUNT_CREATED=0
+WORK_CREATED=0
+DIRTY=0
+COMMITTED=0
+NEW_TXN=0
+OUTFD=
+CRYPTO_FALLBACK=0
+EXT4_FEATURES=/sys/fs/ext4/features
+
+# Pinned static ARM32 tools from the already audited official MTG archive.
+TOOL_SHA=3dfaacc17df061913f47258a1aadcf1a42167f814de73de57c737b650340ecca
+TOOLS=
+setup_tools() {
+  if [ "${1:-}" = --rollback ]; then
+    toolsource=${2:-}/toybox
+    plain_path "$toolsource" && [ -f "$toolsource" ] || fail 'missing saved recovery tools'
+    cp "$toolsource" "$TMPROOT/toybox" || fail 'cannot stage saved recovery tools'
+  else
+    [ -f "${3:-}" ] || fail 'missing input ZIP for tools'
+    unzip -p "$3" tools/toybox > "$TMPROOT/toybox" || fail 'cannot stage pinned recovery tools'
+  fi
+  [ "$(digest "$TMPROOT/toybox")" = "$TOOL_SHA" ] || fail 'recovery tool hash mismatch'
+  chmod 0700 "$TMPROOT/toybox" || fail 'recovery tool permissions'
+  TOOLS=$TMPROOT/toybox
+  [ "$("$TOOLS" stat -c %s "$TOOLS")" = 1188740 ] || fail 'incompatible pinned stat'
+  [ "$("$TOOLS" od -An -tx1 -N4 "$TOOLS" | tr -d ' \n')" = 7f454c46 ] || fail 'incompatible pinned od'
+  "$TOOLS" find "$TMPROOT" -maxdepth 0 -type d -print >/dev/null || fail 'incompatible pinned find'
+}
+stat() { "$TOOLS" stat "$@"; }
+od() { "$TOOLS" od "$@"; }
+find() { "$TOOLS" find "$@"; }
+chcon() { "$TOOLS" chcon "$@"; }
+
+file_list() {
+cat <<'EXYNOS4_FILE_TABLE'
+@@FILES@@
+EXYNOS4_FILE_TABLE
+}
+log() {
+  if [ -n "$OUTFD" ] && [ -e "$OUTFD" ]; then
+    printf 'ui_print %s\nui_print\n' "$*" > "$OUTFD"
+  else
+    printf '%s\n' "$*"
+  fi
+}
+fail() { log "REFUSE: $*"; exit 1; }
+block_device() { [ -b "$1" ]; }
+number() { case "$1" in ''|*[!0-9]*) return 1 ;; esac; }
+digest() { sha256sum "$1" | awk '{print $1}'; }
+bytes() { stat -c %s "$1"; }
+path_ok() {
+  case "$1" in ''|/*|*..*|*//*|*[!A-Za-z0-9._/+-]*) return 1 ;; esac
+  case "$1" in
+    etc/exynos4-google-services/installed.json|addon.d/50-exynos4-google-services.sh|product/app/*|product/priv-app/*|product/overlay/*|product/etc/*|product/lib/*|product/framework/com.google.android.dialer.support.jar|system_ext/app/*|system_ext/priv-app/*|system_ext/etc/*) ;;
+    *) return 1 ;;
+  esac
+  case "$1" in *.apk|*.xml|*.json|*.so|*.jar|*.der|*.rc|addon.d/50-exynos4-google-services.sh) ;; *) return 1 ;; esac
+}
+# Reject symlinks at every existing component, including the final file.
+directory_ok() {
+  case "$1" in ''|/*|*..*|*//*|*[!A-Za-z0-9._/+-]*) return 1 ;; esac
+  awk -F'|' -v prefix="$1/" 'index($7,prefix)==1{found=1} END{exit !found}' "$FILES"
+}
+plain_path() {
+  path=$1
+  case "$path" in /*) ;; *) return 1 ;; esac
+  while [ "$path" != / ]; do
+    [ ! -L "$path" ] || return 1
+    path=${path%/*}; [ -n "$path" ] || path=/
+  done
+}
+mount_info() {
+  awk -v path="$1" '
+    $2 == "/" || $2 == path || index(path,$2 "/") == 1 {
+      if(length($2)>n){n=length($2);src=$1;mnt=$2;fs=$3;opts=$4;count=1}
+      else if(length($2)==n){count++}
+    }
+    END{if(n&&count==1) print src "|" mnt "|" fs "|" opts}
+  ' "$MOUNTS"
+}
+verify_mount() {
+  info=$(mount_info "$1")
+  [ -n "$info" ] || return 1
+  source=${info%%|*}; rest=${info#*|}; point=${rest%%|*}; rest=${rest#*|}; fs=${rest%%|*}; opts=${rest#*|}
+  [ "$point" = "$3" ] || return 1
+  [ "$(readlink -nf "$source")" = "$(readlink -nf "$2")" ] || return 1
+  case "$fs" in ext4|f2fs) ;; *) return 1 ;; esac
+  if [ "${4:-}" = rw ]; then case ",$opts," in *,rw,*) ;; *) return 1 ;; esac; fi
+}
+space_kib() { df -Pk "$1" | awk 'NR==2{print $4}'; }
+check_space() {
+  free=$(space_kib "$1")
+  number "$free" && number "$2" || fail 'cannot determine available storage'
+  [ "$free" -ge "$2" ] || fail "insufficient storage at $1"
+}
+get_prop() { sed -n "s/^$1=//p" "$PROP" | head -n 1; }
+check_target() {
+  [ "$(id -u)" = 0 ] || fail 'recovery root required'
+  case "$(getprop ro.product.model)" in GT-N8000) DEVICE=n8000 ;; GT-N8010) DEVICE=n8010 ;; *) fail 'unsupported recovery model' ;; esac
+  [ -z "$(getprop ro.boot.slot_suffix)" ] || fail 'A/B layout unsupported'
+  [ "$(getprop ro.boot.dynamic_partitions)" != true ] || fail 'dynamic partitions unsupported'
+  SYS=$(readlink -nf "$DEVBASE/SYSTEM")
+  USERDATA=$(readlink -nf "$DEVBASE/USERDATA")
+  [ "$SYS" = /dev/block/mmcblk0p9 ] && block_device "$SYS" || fail 'unexpected SYSTEM device'
+  [ "$USERDATA" = /dev/block/mmcblk0p12 ] && block_device "$USERDATA" || fail 'unexpected USERDATA device'
+  [ "$(blockdev --getsize64 "$SYS")" = 2147483648 ] || fail '2GiB SYSTEM required'
+  verify_mount "$DATA" "$USERDATA" "$DATA" rw || fail 'USERDATA not mounted read/write at /data'
+  plain_path "$DATA" || fail 'symlink data mount'
+  case "$(getprop ro.crypto.state)" in unencrypted|unsupported) ;; '') CRYPTO_FALLBACK=1 ;; *) fail 'encrypted or unknown userdata state unsupported' ;; esac
+  mkdir "$MNT" || fail 'cannot create private system mount'
+  MOUNT_CREATED=1
+  mount -t ext4 -o ro "$SYS" "$MNT" || fail 'cannot mount SYSTEM read-only'
+  MOUNTED=1
+  verify_mount "$S" "$SYS" "$MNT" || fail 'SYSTEM mount identity mismatch'
+  plain_path "$S" || fail 'invalid SAR root'
+  [ -d "$S/product" ] && [ -d "$S/system_ext" ] || fail 'embedded product/system_ext required'
+  plain_path "$S/product" && plain_path "$S/system_ext" || fail 'external/symlink product or system_ext unsupported'
+  PROP=$S/product/etc/build.prop
+  [ -f "$PROP" ] && [ -r "$PROP" ] || fail 'missing embedded build properties'
+  [ "$(get_prop 'ro\.build\.version\.sdk')" = 36 ] || fail 'API36 required'
+  [ "$(get_prop 'ro\.product\.cpu\.abi')" = armeabi-v7a ] || fail 'ARM32 required'
+  case "$(get_prop 'ro\.lineage\.version')" in "23.2-"*"-HTML6405-$DEVICE") ;; *) fail 'ROM/recovery identity mismatch' ;; esac
+}
+write_state() {
+  plain_path "$TXN" && [ -d "$TXN" ] && [ "$(stat -c %u "$TXN")" = 0 ] && [ "$(stat -c %a "$TXN")" = 700 ] || return 1
+  state_tmp=$TXN/.state-$$.tmp
+  [ ! -e "$state_tmp" ] && [ ! -L "$state_tmp" ] || return 1
+  printf '%s\n' "$1" > "$state_tmp" && chmod 0600 "$state_tmp" && sync && mv -f "$state_tmp" "$TXN/state" && sync
+}
+check_ecosystem() {
+  [ ! -e "$S/etc/exynos4-google-services/installed.json" ] || fail 'services flavor already installed; clean-only test writer'
+  for script in "$S/addon.d/30-gapps.sh" "$S/addon.d/50-exynos4-google-services.sh"; do
+    [ ! -e "$script" ] && [ ! -L "$script" ] || fail 'existing preservation owner'
+  done
+  for parent in "$S/app" "$S/priv-app" "$S/product/app" "$S/product/priv-app" "$S/system_ext/app" "$S/system_ext/priv-app"; do
+    for app in GmsCore PrebuiltGmsCore Phonesky FakeStore Companion MicroG microG GsfProxy GoogleServicesFramework GoogleLoginService Exynos4MicroGServices Exynos4MicroGCompanion; do
+      [ ! -e "$parent/$app" ] && [ ! -L "$parent/$app" ] || fail "existing system ecosystem: $app"
+    done
+  done
+  # Retained credential/device-encrypted app data is a signer collision even
+  # when packages.xml or /data/app was removed. Never delete it implicitly.
+  for parent in "$DATA/user" "$DATA/user_de"; do
+    [ ! -e "$parent" ] || { plain_path "$parent" && [ -d "$parent" ]; } || fail 'unsafe user-data root'
+    [ ! -d "$parent" ] && continue
+    for userdir in "$parent"/*; do
+      [ -e "$userdir" ] || continue
+      user=${userdir##*/}; number "$user" || fail 'unknown user-data directory'
+      plain_path "$userdir" && [ -d "$userdir" ] || fail 'unsafe user directory'
+      for package in com.google.android.gms com.android.vending com.google.android.gsf com.google.android.gsf.login; do
+        [ ! -e "$userdir/$package" ] && [ ! -L "$userdir/$package" ] || fail 'retained ecosystem app data'
+      done
+    done
+  done
+  if [ -L "$DATA/data" ]; then
+    [ "$(readlink -nf "$DATA/data")" = "$DATA/user/0" ] || fail 'unexpected legacy app-data symlink'
+  elif [ -e "$DATA/data" ]; then
+    plain_path "$DATA/data" && [ -d "$DATA/data" ] || fail 'unsafe legacy app-data root'
+    for package in com.google.android.gms com.android.vending com.google.android.gsf com.google.android.gsf.login; do
+      [ ! -e "$DATA/data/$package" ] && [ ! -L "$DATA/data/$package" ] || fail 'retained legacy ecosystem data'
+    done
+  fi
+  states=0
+  for state in "$DATA/system/packages.xml" "$DATA/system/packages-backup.xml" "$DATA/system/packages.xml.reservecopy"; do
+    [ -e "$state" ] || continue
+    states=$((states+1))
+    plain_path "$state" && [ -f "$state" ] && [ -s "$state" ] && [ -r "$state" ] || fail 'unreadable package state'
+    magic=$(od -An -tx1 -N4 "$state" | tr -d ' \n')
+    case "$magic" in 41425800|3c3f786d|3c706163) ;; *) fail 'unknown/locked package state format' ;; esac
+    if [ "$magic" = 41425800 ]; then
+      state_bytes=$(bytes "$state")
+      number "$state_bytes" && [ "$state_bytes" -le 2097152 ] || fail 'unsupported package-state size'
+      od -An -tu1 -v "$state" > "$TMPROOT/package-state.bytes" || fail 'cannot decode ABX bytes'
+      LC_ALL=C awk -f "$TMPROOT/package-state.awk" "$TMPROOT/package-state.bytes" || fail 'active, unknown or malformed ABX ecosystem state'
+    elif grep -aEq 'com[.]google[.]android[.]gms|com[.]android[.]vending|com[.]google[.]android[.]gsf' "$state"; then
+      fail 'existing or retained Google/microG package state; no automatic migration'
+    else
+      result=$?; [ "$result" -eq 1 ] || fail 'cannot inspect package state'
+    fi
+  done
+  if [ -d "$DATA/app" ]; then
+    plain_path "$DATA/app" || fail 'symlink data/app'
+    conflicts=$(find "$DATA/app" -maxdepth 3 \( -name '*com.google.android.gms*' -o -name '*com.android.vending*' -o -name '*com.google.android.gsf*' \) -print)
+    [ -z "$conflicts" ] || fail 'retained Google/microG code path'
+    if [ "$states" -eq 0 ]; then
+      [ -z "$(find "$DATA/app" -type f -name '*.apk' -print)" ] || fail 'apps present without package state'
+    fi
+  fi
+}
+check_legacy_plain_userdata() {
+  [ "$CRYPTO_FALLBACK" = 1 ] || return 0
+  # Some legacy TWRP releases publish no crypto properties. This exception is
+  # bounded to old kernels with no ext4 encryption feature, raw ext4 USERDATA,
+  # readable package state and actual plaintext, non-overmounted user trees.
+  case "$(uname -r)" in 3.0.*|3.4.*) ;; *) fail 'unknown crypto state on unsupported recovery kernel' ;; esac
+  [ -d "$EXT4_FEATURES" ] && [ ! -e "$EXT4_FEATURES/encryption" ] && [ ! -e "$EXT4_FEATURES/fscrypt" ] || fail 'cannot exclude ext4 file encryption'
+  info=$(mount_info "$DATA"); rest=${info#*|}; rest=${rest#*|}; fs=${rest%%|*}
+  [ "$fs" = ext4 ] && verify_mount "$DATA" "$USERDATA" "$DATA" rw || fail 'legacy plain-data proof requires raw ext4'
+  proof_state=$DATA/system/packages.xml
+  plain_path "$proof_state" && [ -f "$proof_state" ] && [ -r "$proof_state" ] && [ -s "$proof_state" ] || fail 'legacy crypto proof requires readable package state'
+  proof_magic=$(od -An -tx1 -N4 "$proof_state" | tr -d ' \n')
+  case "$proof_magic" in 41425800|3c3f786d|3c706163) ;; *) fail 'legacy crypto proof requires plaintext package format' ;; esac
+  for parent in "$DATA/user" "$DATA/user_de"; do
+    [ -d "$parent/0" ] && plain_path "$parent/0" || fail 'missing plaintext primary user directories'
+    for userdir in "$parent"/*; do
+      [ -e "$userdir" ] || continue
+      user=${userdir##*/}; number "$user" || fail 'encoded/non-numeric user directory'
+      [ -r "$userdir" ] && [ -x "$userdir" ] && plain_path "$userdir" && verify_mount "$userdir" "$USERDATA" "$DATA" rw || fail 'locked or overmounted user data'
+      ls -A "$userdir" > "$TMPROOT/user-dir-entries" || fail 'cannot read primary user tree'
+      while IFS= read -r entry; do
+        case "$entry" in ''|*[!A-Za-z0-9_.-]*) fail 'encoded or unsupported app-data entry' ;; esac
+        [ -d "$userdir/$entry" ] && [ -r "$userdir/$entry" ] && [ -x "$userdir/$entry" ] && plain_path "$userdir/$entry" && verify_mount "$userdir/$entry" "$USERDATA" "$DATA" rw || fail 'locked or overmounted app data'
+      done < "$TMPROOT/user-dir-entries"
+    done
+  done
+  log 'Legacy recovery has no crypto property; bounded raw-ext4/plaintext-user proof passed'
+}
+
+validate_table() {
+  cat > "$TMPROOT/package-state.awk" <<'EXYNOS4_ABX_HELPER'
+@@ABX_HELPER@@
+EXYNOS4_ABX_HELPER
+  file_list > "$FILES" || fail 'cannot stage file table'
+  [ "$(wc -l < "$FILES" | tr -d ' ')" = "$FILE_COUNT" ] || fail 'file table count mismatch'
+  awk -F'|' 'NF!=7 || seen[$7]++ {bad=1} END{exit bad}' "$FILES" || fail 'duplicate/malformed file table'
+  awk -F'|' '$7=="etc/exynos4-google-services/installed.json"{m++} $7=="addon.d/50-exynos4-google-services.sh"{a++} END{exit !(m==1&&a==1)}' "$FILES" || fail 'missing marker or preservation owner'
+  while IFS='|' read -r hash size uid gid mode context rel; do
+    [ "${#hash}" = 64 ] || fail 'invalid file hash'
+    case "$hash" in *[!0-9a-f]*) fail 'invalid file hash' ;; esac
+    number "$size" && [ "${#size}" -le 10 ] || fail 'invalid file size'
+    [ "$uid" = 0 ] && [ "$gid" = 0 ] || fail 'unexpected payload owner'
+    [ "$context" = u:object_r:system_file:s0 ] || fail 'unexpected payload context'
+    path_ok "$rel" || fail 'unapproved payload path'
+    case "$rel:$mode" in addon.d/50-exynos4-google-services.sh:0755) ;; *:0644) ;; *) fail 'unapproved executable file' ;; esac
+  done < "$FILES"
+}
+stage_payload() {
+  mkdir "$TMPROOT/stage" || fail 'cannot create stage'
+  while IFS='|' read -r hash size uid gid mode context rel; do
+    staged=$TMPROOT/stage/$rel
+    mkdir -p "$(dirname "$staged")" || fail 'cannot stage directory'
+    unzip -p "$ZIP" "system/$rel" > "$staged" || fail 'payload extraction failed'
+    [ "$(bytes "$staged")" = "$size" ] && [ "$(digest "$staged")" = "$hash" ] || fail 'payload checksum mismatch'
+  done < "$FILES"
+}
+new_directory_list() {
+  : > "$TMPROOT/newdirs.unsorted" || fail 'cannot create directory list'
+  while IFS='|' read -r hash size uid gid mode context rel; do
+    plain_path "$S/$rel" || fail 'symlink destination'
+    parent=${rel%/*}
+    while [ -n "$parent" ]; do
+      if [ -e "$S/$parent" ]; then
+        [ -d "$S/$parent" ] || fail 'non-directory destination parent'
+      else
+        printf '%s\n' "$parent" >> "$TMPROOT/newdirs.unsorted" || fail 'cannot record directory'
+      fi
+      case "$parent" in */*) parent=${parent%/*} ;; *) parent= ;; esac
+    done
+  done < "$FILES"
+  sort -u "$TMPROOT/newdirs.unsorted" > "$TMPROOT/newdirs" || fail 'cannot sort directory list'
+}
+prepare_transaction() {
+  plain_path "$TXROOT" || fail 'symlink transaction root'
+  # Only create standard diagnostic parents when absent; never chmod existing ones.
+  for dir in "$DATA/local" "$DATA/local/tmp"; do
+    if [ ! -e "$dir" ]; then mkdir "$dir" || fail 'cannot create diagnostic parent'; chmod 0755 "$dir" || fail 'cannot set diagnostic parent mode'; fi
+    plain_path "$dir" && [ -d "$dir" ] || fail 'invalid diagnostic parent'
+  done
+  if [ ! -e "$TXROOT" ]; then mkdir "$TXROOT" || fail 'cannot create transaction root'; chmod 0700 "$TXROOT" || fail 'transaction mode'; chown 0:0 "$TXROOT" || fail 'transaction owner'; fi
+  [ -d "$TXROOT" ] && [ "$(stat -c %u "$TXROOT")" = 0 ] && [ "$(stat -c %a "$TXROOT")" = 700 ] || fail 'unsafe transaction root'
+  for previous in "$TXROOT"/txn-*; do
+    [ -e "$previous" ] || continue
+    plain_path "$previous" || fail 'symlink prior transaction'
+    state=$(cat "$previous/state" 2>/dev/null || true)
+    case "$state" in COMMITTED|ROLLED_BACK|FAILED_CLEAN) ;; *) fail 'unfinished transaction exists; use saved rollback helper' ;; esac
+  done
+  TXID=txn-$(date +%s)-$$
+  TXN=$TXROOT/$TXID
+  mkdir "$TXN" || fail 'cannot create transaction'
+  NEW_TXN=1
+  chmod 0700 "$TXN" || fail 'transaction permissions'
+  mkdir "$TXN/original" || fail 'cannot create backup directory'
+  chmod 0700 "$TXN/original" || fail 'backup permissions'
+  write_state PREPARING || fail 'cannot record transaction state'
+  cp "$0" "$TXN/rollback.sh" || fail 'cannot retain rollback helper'
+  cp "$TOOLS" "$TXN/toybox" || fail 'cannot retain recovery tools'
+  chmod 0700 "$TXN/toybox" || fail 'saved recovery tool mode'
+  [ "$(digest "$TXN/toybox")" = "$TOOL_SHA" ] || fail 'saved recovery tool checksum'
+  chmod 0700 "$TXN/rollback.sh" || fail 'rollback helper mode'
+  cp "$FILES" "$TXN/files" || fail 'cannot retain file table'
+  cp "$TMPROOT/newdirs" "$TXN/newdirs" || fail 'cannot retain directory list'
+  printf '%s\n' "$FLAVOR" > "$TXN/flavor" || fail 'cannot retain flavor'
+  printf '%s\n' "$INPUT_SHA" > "$TXN/input-sha256" || fail 'cannot retain input hash'
+  : > "$TXN/journal" || fail 'cannot create journal'
+  total=0
+  while IFS='|' read -r hash size uid gid mode context rel; do
+    target=$S/$rel
+    plain_path "$target" || fail 'symlink destination before backup'
+    if [ -e "$target" ]; then
+      [ -f "$target" ] && [ "$(stat -c %h "$target")" = 1 ] || fail 'nonregular/hardlinked destination'
+      total=$((total+$(bytes "$target")))
+    fi
+  done < "$FILES"
+  check_space "$DATA" $(( (total+1023)/1024+16384 ))
+  while IFS='|' read -r hash size uid gid mode context rel; do
+    target=$S/$rel
+    if [ -e "$target" ]; then
+      old_mode=$(stat -c %a "$target"); old_uid=$(stat -c %u "$target"); old_gid=$(stat -c %g "$target")
+      number "$old_mode" && number "$old_uid" && number "$old_gid" || fail 'unreadable original metadata'
+      old_context=$(ls -Zd "$target" | grep -o 'u:object_r:[^[:space:]]*' | head -n 1)
+      case "$old_context" in u:object_r:*:s0) ;; *) fail 'unreadable original SELinux context' ;; esac
+      case "$old_context" in *[!A-Za-z0-9_:]*) fail 'invalid original context' ;; esac
+      original=$TXN/original/$rel
+      mkdir -p "$(dirname "$original")" || fail 'backup parent'
+      cp -p "$target" "$original" || fail 'original backup failed'
+      old_hash=$(digest "$target")
+      [ "$(digest "$original")" = "$old_hash" ] || fail 'original backup hash mismatch'
+      printf 'old|%s|%s|%s|%s|%s|%s\n' "$old_hash" "$old_mode" "$old_uid" "$old_gid" "$old_context" "$rel" >> "$TXN/journal" || fail 'cannot retain backup journal'
+    else
+      printf 'new|-|-|-|-|-|%s\n' "$rel" >> "$TXN/journal" || fail 'cannot retain backup journal'
+    fi
+  done < "$FILES"
+  chmod 0600 "$TXN"/journal "$TXN"/files "$TXN"/newdirs "$TXN"/state "$TXN"/flavor "$TXN"/input-sha256 || fail 'cannot protect transaction metadata'
+  write_state BACKED_UP || fail 'cannot record backup completion'
+  sync || fail 'cannot synchronize backups'
+}
+metadata_matches() {
+  actual_uid=$(stat -c %u "$1"); actual_gid=$(stat -c %g "$1"); actual_mode=$(stat -c %a "$1")
+  actual_label=$(ls -Zd "$1" | grep -o 'u:object_r:[^[:space:]]*' | head -n 1)
+  if [ "$actual_uid" != "$2" ] || [ "$actual_gid" != "$3" ] || [ "$actual_mode" != "${4#0}" ] || [ "$actual_label" != "$5" ]; then
+    log "Metadata mismatch path=$1 actual=$actual_uid:$actual_gid:$actual_mode:$actual_label expected=$2:$3:${4#0}:$5"
+    return 1
+  fi
+}
+set_metadata() {
+  chown "$2:$3" "$1" || { log "chown failed path=$1"; return 1; }
+  chmod "$4" "$1" || { log "chmod failed path=$1"; return 1; }
+  chcon "$5" "$1" || { log "chcon failed path=$1"; return 1; }
+  metadata_matches "$@"
+}
+expected_hash() { awk -F'|' -v name="$1" '$7==name{print $1;exit}' "$FILES"; }
+write_payload() {
+  mount -o remount,rw "$MNT" || fail 'cannot remount SYSTEM writable'
+  verify_mount "$S" "$SYS" "$MNT" rw || fail 'writable mount identity mismatch'
+  DIRTY=1
+  write_state DIRTY || fail 'cannot record write intent'
+  sync || fail 'cannot synchronize write intent'
+  while IFS= read -r rel; do
+    plain_path "$S/$rel" || fail 'symlink directory before write'
+    [ ! -e "$S/$rel" ] || fail 'destination changed during staging'
+    mkdir "$S/$rel" || fail 'directory creation failed'
+    set_metadata "$S/$rel" 0 0 0755 u:object_r:system_file:s0 || fail 'directory metadata failed'
+  done < "$TXN/newdirs"
+  while IFS='|' read -r hash size uid gid mode context rel; do
+    verify_mount "$S" "$SYS" "$MNT" rw && plain_path "$S/$rel" || fail 'target changed before write'
+    tmp=$S/$rel.exynos4-$TXID.tmp
+    [ ! -e "$tmp" ] && [ ! -L "$tmp" ] || fail 'temporary destination exists'
+    cp "$TMPROOT/stage/$rel" "$tmp" || fail 'file copy failed'
+    set_metadata "$tmp" "$uid" "$gid" "$mode" "$context" || fail 'file metadata failed'
+    [ "$(digest "$tmp")" = "$hash" ] || fail 'temporary file checksum mismatch'
+    mv -f "$tmp" "$S/$rel" || fail 'atomic file replacement failed'
+    [ "$(digest "$S/$rel")" = "$hash" ] || fail 'installed checksum mismatch'
+    metadata_matches "$S/$rel" "$uid" "$gid" "$mode" "$context" || fail 'installed metadata mismatch'
+  done < "$FILES"
+  sync || fail 'cannot synchronize installed files'
+  write_state COMMITTED || fail 'cannot record commit'
+  sync || fail 'cannot synchronize commit'
+  COMMITTED=1
+  DIRTY=0
+  log "TEST install committed; rollback retained at $TXN/rollback.sh"
+}
+rollback_transaction() {
+  [ -n "$TXN" ] && [ -f "$TXN/journal" ] || return 1
+  plain_path "$TXN/journal" && plain_path "$TXN/newdirs" || return 1
+  [ "$(wc -l < "$TXN/journal" | tr -d ' ')" = "$FILE_COUNT" ] || return 1
+  awk -F'|' 'NF!=7 || seen[$7]++ {bad=1} END{exit bad}' "$TXN/journal" || return 1
+  verify_mount "$S" "$SYS" "$MNT" rw || return 1
+  ok=1
+  while IFS='|' read -r kind old_hash old_mode old_uid old_gid old_context rel; do
+    path_ok "$rel" && plain_path "$S/$rel" || { ok=0; continue; }
+    expected=$(expected_hash "$rel")
+    [ -n "$expected" ] || { ok=0; continue; }
+    target=$S/$rel
+    tmp=$target.exynos4-$TXID.tmp
+    if [ -e "$tmp" ] || [ -L "$tmp" ]; then
+      [ -f "$tmp" ] && [ ! -L "$tmp" ] && rm -f "$tmp" || { ok=0; continue; }
+    fi
+    if [ -e "$target" ]; then
+      [ -f "$target" ] && [ ! -L "$target" ] || { ok=0; continue; }
+      current=$(digest "$target")
+      [ "$current" = "$expected" ] || [ "$current" = "$old_hash" ] || { ok=0; continue; }
+    fi
+    case "$kind" in
+      new) [ ! -e "$target" ] || rm -f "$target" || ok=0 ;;
+      old)
+        number "$old_mode" && number "$old_uid" && number "$old_gid" || { ok=0; continue; }
+        case "$old_context" in u:object_r:*:s0) ;; *) ok=0; continue ;; esac
+        case "$old_context" in *[!A-Za-z0-9_:]*) ok=0; continue ;; esac
+        original=$TXN/original/$rel
+        plain_path "$original" && [ -f "$original" ] && [ "$(digest "$original")" = "$old_hash" ] || { ok=0; continue; }
+        cp -p "$original" "$tmp" && set_metadata "$tmp" "$old_uid" "$old_gid" "$old_mode" "$old_context" && mv -f "$tmp" "$target" || { ok=0; continue; }
+        [ "$(digest "$target")" = "$old_hash" ] || ok=0
+        ;;
+      *) ok=0 ;;
+    esac
+  done < "$TXN/journal"
+  if [ "$ok" = 1 ]; then
+    sort -r "$TXN/newdirs" > "$TMPROOT/rollback-dirs" || return 1
+    while IFS= read -r rel; do
+      directory_ok "$rel" && plain_path "$S/$rel" || { ok=0; continue; }
+      [ ! -e "$S/$rel" ] || rmdir "$S/$rel" || ok=0
+    done < "$TMPROOT/rollback-dirs"
+  fi
+  sync || ok=0
+  if [ "$ok" = 1 ]; then
+    write_state ROLLED_BACK && sync && return 0
+  fi
+  write_state RECOVERY_REQUIRED; sync; return 1
+}
+finish() {
+  status=$?
+  trap - 0 1 2 15
+  if [ "$DIRTY" = 1 ]; then
+    if rollback_transaction; then log 'Transaction rolled back after failure'; else log 'ROLLBACK INCOMPLETE: stay in recovery; preserve transaction backup'; status=1; fi
+  elif [ "$NEW_TXN" = 1 ] && [ -n "$TXN" ] && [ "$COMMITTED" != 1 ]; then
+    write_state FAILED_CLEAN; sync
+  fi
+  if [ "$MOUNTED" = 1 ]; then
+    mount -o remount,ro "$MNT" >/dev/null 2>&1 || true
+    if umount "$MNT"; then rmdir "$MNT" || true; else log 'Private system mount remains; do not remove its directory'; fi
+  elif [ "$MOUNT_CREATED" = 1 ]; then
+    [ ! -d "$MNT" ] || rmdir "$MNT" 2>/dev/null || true
+  fi
+  if [ "$WORK_CREATED" = 1 ]; then
+    [ ! -d "$TMPROOT" ] || rm -rf "$TMPROOT"
+  fi
+  exit "$status"
+}
+writer_main() {
+  set -u
+  trap finish 0
+  trap 'exit 1' 1 2 15
+  mkdir "$TMPROOT" || fail 'cannot create private workspace'
+  WORK_CREATED=1
+  chmod 0700 "$TMPROOT" || fail 'workspace permissions'
+  setup_tools "$@"
+  validate_table
+  if [ "${1:-}" = --rollback ]; then
+    requested=${2:-}
+    check_target
+    check_legacy_plain_userdata
+    plain_path "$requested" && [ -d "$requested" ] || fail 'invalid rollback directory'
+    case "$requested" in "$TXROOT"/txn-*) ;; *) fail 'rollback outside transaction root' ;; esac
+    canonical=$(readlink -f "$requested") || fail 'cannot resolve rollback directory'
+    [ "$canonical" = "$requested" ] && [ "${canonical%/*}" = "$TXROOT" ] || fail 'noncanonical rollback path'
+    TXID=${requested##*/}
+    printf '%s\n' "$TXID" | grep -Eq '^txn-[0-9]+-[0-9]+$' || fail 'invalid transaction id' 
+    TXN=$requested
+    [ "$(stat -c %u "$TXROOT")" = 0 ] && [ "$(stat -c %a "$TXROOT")" = 700 ] && [ "$(stat -c %u "$TXN")" = 0 ] && [ "$(stat -c %a "$TXN")" = 700 ] || fail 'unsafe rollback ownership'
+    [ "$(cat "$TXN/flavor")" = "$FLAVOR" ] && [ "$(cat "$TXN/input-sha256")" = "$INPUT_SHA" ] || fail 'rollback flavor/input mismatch'
+    cmp -s "$FILES" "$TXN/files" || fail 'rollback file table mismatch'
+    state=$(cat "$TXN/state")
+    case "$state" in
+      PREPARING|BACKED_UP|FAILED_CLEAN)
+        write_state ROLLED_BACK || fail 'cannot finish clean transaction'
+        sync || fail 'cannot synchronize clean transaction'
+        COMMITTED=1
+        log 'No system writes had started; transaction closed'
+        return 0
+        ;;
+      DIRTY|COMMITTED|RECOVERY_REQUIRED) ;;
+      ROLLED_BACK) COMMITTED=1; log 'Already rolled back'; return 0 ;;
+      *) fail 'unknown rollback state' ;;
+    esac
+    mount -o remount,rw "$MNT" && verify_mount "$S" "$SYS" "$MNT" rw || fail 'rollback mount failed'
+    DIRTY=1
+    rollback_transaction || fail 'manual rollback incomplete'
+    DIRTY=0
+    COMMITTED=1
+    log 'System-file rollback complete; app/account data were not changed'
+    return 0
+  fi
+  case "${2:-}" in ''|*[!0-9]*) fail 'invalid recovery output descriptor' ;; esac
+  OUTFD=/proc/self/fd/$2
+  ZIP=${3:-}
+  [ -f "$ZIP" ] || fail 'missing input ZIP'
+  log "Exynos4 $FLAVOR UNSIGNED TEST installer; OTA survival NOT validated"
+  check_target
+  check_ecosystem
+  check_legacy_plain_userdata
+  check_space "$TMPROOT" $(( (PAYLOAD_BYTES+1023)/1024+16384 ))
+  check_space "$S" $(( (PAYLOAD_BYTES+1023)/1024+65536 ))
+  stage_payload
+  new_directory_list
+  prepare_transaction
+  write_payload
+  log 'No userdata/apps/accounts were removed; reboot and validate explicitly'
+}
+# Host fixtures source everything above this line and stub mounts/chown/chcon.
+writer_main "$@"
